@@ -5,61 +5,82 @@
 
 // Dealing with name and preventing API being requested on name that already has been queried.
 
-var arrayOfNames =[];
-var returnInfo =  {"name":"diana","gender":"female","samples":36,"accuracy":100,"duration":"41ms"};
 
 
 
-var searchInputText = function(name){
-    var upperName= capitalizeFirstLetter(name);
-    printToLatest(upperName);
-    if (isNameNew(upperName) == true)
-      return;
-    else {
-      arrayOfNames.push(upperName);
-      console.log(arrayOfNames);
-      updateArrayOfNamesList();
-      queryName(name);
-    }
-};
+var arrayOfHashObjects = [];
 
-var printToLatest = function(name){
-  var gender = returnInfo['gender'];
-  var samples = returnInfo['samples'];
-  var accuracy = returnInfo['accuracy'];
-  console.log(accuracy);
-  console.log(gender);
-  console.log(sample);
-  var output = document.querySelector('#output')
-  output.innerText ="Result: " + name + " : "+ gender + " with " + samples + " samples at " + accuracy + "%  accuracy"
-};
+var arrayOfNamesSearchedThisSession =[];
+// var arrayOfHashObjects = [];
+// var diana = {"name":"diana","gender":"female","samples":36,"accuracy":100,"duration":"41ms"};
+// var andrew = {"name": "andrew", gender: "male", samples: 82448, accuracy: 99, duration: "40ms"};
+// arrayOfHashObjects.push(diana);
+// arrayOfHashObjects.push(andrew);
 
-var isNameNew = function(newName){
-  var nameMatch = false;
-  for (element of arrayOfNames){
-    if (element == newName){
-      // var gender = element['gender'];
-      // var samples = element['samples'];
-      // var accuracy = element['accuracy'];
-      return true;
-    } else {
-      var nameMatch = false;
-    }
+
+
+var searchExistingNames = function(typedName){
+  if (doesNameExist(typedName) == true){
+
+    return;
+  } else {
+    queryName(typedName);
+
   }
-  return nameMatch;
 }
 
-var updateArrayOfNamesList= function(){
+
+var addNameToLastestSearchesInfo= function(newElement){
+  var alreadyExists = false;
+  for (element of arrayOfNamesSearchedThisSession){
+    if (element['name'] == newElement['name']){
+      return alreadyExists = true;
+    } else {
+      alreadyExists = false;
+    }
+  }
+  if (alreadyExists == true) {
+    outputToArrayOfLatestSearches();
+  } else {
+    arrayOfNamesSearchedThisSession.push(newElement);
+    outputToArrayOfLatestSearches();
+  }
+}
+
+
+var outputToArrayOfLatestSearches = function(){
   var arrayOutput= document.querySelector('#array-output');
   arrayOutput.innerHTML ='';
-  let array1 = arrayOfNames.reverse();
+  let array1 = arrayOfNamesSearchedThisSession.reverse();
   for (element of array1){
     var newLi = document.createElement("li");
-    newLi.innerText= element;
+    newLi.innerText = "name: " + element['name'] + " : "+ element['gender']+ " : " + element['samples'] + " : " + element['accuracy'] + "%  accuracy"
     arrayOutput.appendChild(newLi);
   }
   array1.reverse();
 }
+
+
+var doesNameExist = function(typedName){
+  var nameDoesntExist = false;
+  for (element of arrayOfHashObjects){
+    if (element['name'] == typedName){
+      printToLatestInfoBox(element);
+      addNameToLastestSearchesInfo(element);
+      return true;
+    } else {
+      nameDoesntExist = false;
+    }
+  }
+  return nameDoesntExist;
+}
+
+var printToLatestInfoBox = function(nameInfoToPrint){
+  var objectToPrint = nameInfoToPrint;
+  var name = objectToPrint['name'];
+  var output = document.querySelector('#output')
+  output.innerText ="Result: " + objectToPrint['name'] + " : "+ objectToPrint['gender']+ " with " + objectToPrint['samples'] + " samples at " + objectToPrint['accuracy'] + "%  accuracy"
+};
 
 
 
@@ -67,6 +88,7 @@ var updateArrayOfNamesList= function(){
 
 var queryName = function(name){
   urlConstructor(name);
+  console.log('API has been pinged!');
   makeRequest(url, requestComplete);
 }
 
@@ -81,9 +103,14 @@ var requestComplete = function() {
   if (this.status !== 200)
   return;
   var jsonString = this.responseText;
-
-  // returnInfo = JSON.parse(jsonString);
+  returnInfo = JSON.parse(jsonString);
+  arrayOfHashObjects.push(returnInfo);
   console.log(returnInfo);
+  console.log(arrayOfHashObjects);
+  addNameToLastestSearchesInfo(returnInfo);
+  printToLatestInfoBox(returnInfo);
+  let jsonString2 = JSON.stringify(arrayOfHashObjects);
+  localStorage.setItem('namesGenders', jsonString2);
 };
 
 var urlConstructor= function(name){
@@ -93,36 +120,27 @@ var urlConstructor= function(name){
   return url;
 };
 
-
-
-
-
-
-
 var app = function(){
   var searchBox = document.querySelector('#search-box')
    window.addEventListener('keyup', function(e){
     if (e.keyCode == 13){
-      var name = searchBox.value;
-      searchInputText(name);
+      var nameTyped = searchBox.value;
+      searchExistingNames(nameTyped);
       searchBox.value ="";
     }
+
   })
+  var jsonString1 = localStorage.getItem('namesGenders');
+  arrayOfHashObjects = JSON.parse(jsonString1);
+  console.log(arrayOfHashObjects);
 };
 
 
 
-var capitalizeFirstLetter =function(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1)};
-
-
-
-
-// var jsonString = JSON.stringify(pet);
-// localStorage.setItem('pet', jsonString);
-
-// var jsonString = localStorage.getItem('pet');
-// var savedPet = JSON.parse(jsonString);
 
 
 window.addEventListener('load', app);
+
+
+// var capitalizeFirstLetter =function(string) {
+// return string.charAt(0).toUpperCase() + string.slice(1)};
