@@ -14,7 +14,6 @@ var incomingInformationDissemination = function(incomingParsedData){
   printToLatestInfoBox(incomingParsedData);
 }
 
-
 // Dealing with previously entered names and displaying the information
 
 var searchExistingNames = function(typedName){
